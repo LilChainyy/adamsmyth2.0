@@ -606,6 +606,11 @@ Tool 2: get_news
 - Call Financial Modeling Prep API: /stable/stock_news?tickers={ticker}&limit={limit}
 - Return: title, source, date, summary, url
 - Include mock fallback
+- OPTIONAL ENHANCEMENT: If FIRECRAWL_API_KEY is set, use Firecrawl (https://api.firecrawl.dev/v1/scrape) to fetch full article text from the news URL, then have the AI summarize it in beginner-friendly language instead of using FMP's short snippet. Wrap in try/catch — fall back to FMP summary if Firecrawl fails or key is missing.
+
+Also create:
+- /src/lib/firecrawl.ts — wrapper for Firecrawl API calls (scrape URL → markdown). Only active when FIRECRAWL_API_KEY env var is set.
+- Add FIRECRAWL_API_KEY to .env.local.example (optional, with comment explaining it enriches news)
 
 Also create /src/lib/api-cache.ts — a simple in-memory cache with TTL:
 - Stock profiles: cache for 24 hours
@@ -826,7 +831,9 @@ Approach: Use Supabase pgvector extension (simpler than adding Pinecone for MVP)
 3. /src/lib/embeddings.ts — generate embeddings using Anthropic's embedding API or OpenAI's text-embedding-3-small
 4. /src/scripts/seed-knowledge.ts — script to embed and insert educational content
 
-Seed content (write 20 beginner-friendly educational articles):
+Seed content — TWO sources:
+
+SOURCE A: Hand-written articles (write 20 beginner-friendly educational articles):
 - "What is a P/E ratio and why it matters" (valuation_context)
 - "How to read a company's revenue breakdown" (business_model)
 - "Understanding profit margins" (financials)
@@ -840,6 +847,13 @@ Seed content (write 20 beginner-friendly educational articles):
 ... (write 10 more covering all 6 dimensions)
 
 Each article: 300-500 words, beginner-friendly, uses everyday analogies, no jargon without explanation.
+
+SOURCE B (OPTIONAL — requires FIRECRAWL_API_KEY): Crawl educational finance content using Firecrawl.
+- Create /src/scripts/crawl-knowledge.ts — uses Firecrawl's batch scrape to pull content from curated educational URLs (Investopedia beginner guides, SEC.gov investor education pages, etc.)
+- Scrape → clean markdown → chunk into 300-500 word sections → tag with relevant dimension → embed → insert into knowledge_base
+- Include a curated URL list in /src/data/knowledge-sources.json (start with 10-15 high-quality educational URLs)
+- Run as a one-time seed script: `pnpm run crawl-knowledge`
+- This supplements the hand-written articles with broader coverage. The hand-written ones are the baseline; crawled content is a bonus.
 
 Add AI tool:
 Tool: search_knowledge_base
@@ -1025,3 +1039,43 @@ After completing each phase, update CLAUDE.md with:
 - New conventions established
 - Any architectural decisions that changed
 - Known issues or technical debt to address later
+
+---
+
+## Future Expansion Ideas (Post-v1)
+
+> Features to build after the core product is stable and users are active. Most of these leverage **Firecrawl** (https://firecrawl.dev) for web scraping. Firecrawl free tier = 500 credits, Hobby = $16/mo for 3,000 credits. 1 credit = 1 page scrape.
+
+### Firecrawl-Powered Features
+
+**1. SEC Filing Digester**
+Scrape 10-K and 10-Q filings from SEC EDGAR for the user's holdings. Use Firecrawl to pull the full filing → chunk → summarize risk factors, business description, and management discussion in beginner-friendly language. Map to `business_model`, `risks`, and `financials` dimensions. This turns dense legal documents into actual learning content.
+
+**2. Earnings Call Breakdown**
+After earnings season, scrape earnings call transcripts (from sources like Motley Fool or Seeking Alpha). Have the AI break down what the CEO said, what analysts asked, and what it means for the company — all in plain English. Ties into `news_catalysts` and `financials` dimensions.
+
+**3. Company Deep Dive from Source**
+Use Firecrawl to scrape a company's actual website (About page, investor relations, product pages). Feed this to the AI so when a user asks "what does this company actually do?", the answer comes from the company's own words — not just a database blurb. Enriches the `business_model` dimension.
+
+**4. Knowledge Base Auto-Refresh**
+Set up a scheduled job (weekly) that uses Firecrawl's batch scrape to re-crawl the curated educational URLs in `knowledge-sources.json`. Detect new/updated content, re-embed, and update pgvector. Keeps the knowledge base fresh without manual effort.
+
+**5. "Explain This Article" Feature**
+User pastes a financial news URL into the chat. Firecrawl scrapes the full article → AI reads it → explains it in the user's learning context (what they already know, what stocks they hold, where they are in their learning journey). Premium feel, very differentiated.
+
+**6. Competitor Intelligence Enrichment**
+When the AI runs the `get_competitors` tool, use Firecrawl to scrape recent news and key product pages for each competitor. Gives the AI richer context to explain competitive dynamics rather than just comparing numbers.
+
+### Non-Firecrawl Future Ideas
+
+**7. Portfolio Alerts**
+Notify users when something educational happens to their holdings (earnings report, major news, price milestone). Not "your stock dropped 5%" — instead: "Apple just reported earnings — want to learn how to read the results?"
+
+**8. Learning Streaks & Gamification**
+Daily learning streaks, badges for completing a dimension across all holdings, weekly digests of what the user learned. Light gamification to drive retention.
+
+**9. Social Learning**
+Anonymous aggregated insights: "73% of Adamsmyth learners found Apple's moat interesting — here's why." No portfolio sharing, just collective learning patterns.
+
+**10. Multi-Portfolio Support**
+Let users track multiple portfolios (retirement, brokerage, paper trading) with separate learning progress for each.

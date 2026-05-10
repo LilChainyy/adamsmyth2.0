@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/top-bar";
 import { BottomNav } from "@/components/bottom-nav";
+import { Providers } from "@/components/providers";
 
 export default async function AppLayout({
   children,
@@ -27,18 +28,22 @@ export default async function AppLayout({
   // Onboarding page gets a minimal shell (no bottom nav)
   if (isOnboarding) {
     return (
-      <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col bg-stone-50">
-        <TopBar />
-        <main className="flex-1">{children}</main>
-      </div>
+      <Providers>
+        <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col bg-stone-50">
+          <TopBar />
+          <main className="flex-1">{children}</main>
+        </div>
+      </Providers>
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col bg-stone-50">
-      <TopBar />
-      <main className="flex-1 pb-16">{children}</main>
-      <BottomNav />
-    </div>
+    <Providers>
+      <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col bg-stone-50">
+        <TopBar />
+        <main className="flex-1 pb-16">{children}</main>
+        <BottomNav />
+      </div>
+    </Providers>
   );
 }
