@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { isToolUIPart, type UIMessage } from "ai";
 import { ToolPartRenderer } from "@/components/chat/tool-part-renderer";
@@ -54,13 +55,31 @@ export const MessageBubble = memo(function MessageBubble({ role, content, parts,
         {content && (
           <div
             className={cn(
-              "whitespace-pre-wrap break-words px-4 py-2.5 text-sm leading-relaxed",
+              "break-words px-4 py-2.5 text-sm leading-relaxed",
               isUser
-                ? "rounded-2xl rounded-br-md bg-amber-800 text-white"
+                ? "whitespace-pre-wrap rounded-2xl rounded-br-md bg-amber-800 text-white"
                 : "rounded-2xl rounded-bl-md bg-white text-stone-800 shadow-sm"
             )}
           >
-            {content}
+            {isUser ? (
+              content
+            ) : (
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                  ul: ({ children }) => <ul className="mb-2 list-disc pl-4 last:mb-0">{children}</ul>,
+                  ol: ({ children }) => <ol className="mb-2 list-decimal pl-4 last:mb-0">{children}</ol>,
+                  li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  code: ({ children }) => (
+                    <code className="rounded bg-stone-100 px-1 py-0.5 text-xs font-mono">{children}</code>
+                  ),
+                }}
+              >
+                {content}
+              </ReactMarkdown>
+            )}
           </div>
         )}
       </div>

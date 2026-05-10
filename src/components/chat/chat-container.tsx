@@ -7,22 +7,32 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { SuggestedPrompts } from "@/components/chat/suggested-prompts";
 import { ChatInput } from "@/components/chat/chat-input";
 import { FollowUpChips } from "@/components/chat/follow-up-chips";
-import { SmartRecommendation } from "@/components/chat/smart-recommendation";
+import { PortfolioPulse } from "@/components/chat/portfolio-pulse";
 import { usePersistMessages } from "@/hooks/use-persist-messages";
 import { useCheckpointHandler } from "@/hooks/use-checkpoint-handler";
 
 const WELCOME_MESSAGE =
-  "Hey! I'm your investment learning assistant. Ask me anything about stocks, ETFs, or investing concepts — I'm here to help you learn, not to give financial advice.";
+  "Here's what's been going on with your stocks this week 👇";
 
 export function ChatContainer() {
   const { messages, sendMessage, status, error } = useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [holdings, setHoldings] = useState<{ ticker: string; company_name: string }[]>([]);
 
   const isStreaming = status === "streaming" || status === "submitted";
 
   usePersistMessages(messages);
   const handleCheckpointAnswer = useCheckpointHandler();
+
+  useEffect(() => {
+    fetch("/api/portfolio")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.holdings) setHoldings(data.holdings);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -57,6 +67,7 @@ export function ChatContainer() {
   }, [messages]);
 
   const isEmpty = messages.length === 0;
+  const showPulse = messages.length < 3;
   const showFollowUps = !isStreaming && !isTyping && followUps.length > 0;
 
   return (
@@ -64,13 +75,14 @@ export function ChatContainer() {
       <div className="flex flex-1 flex-col gap-3 px-4 pb-24 pt-4">
         <MessageBubble role="assistant" content={WELCOME_MESSAGE} />
 
+        {showPulse && (
+          <PortfolioPulse onAsk={handleSend} />
+        )}
+
         {isEmpty && (
-          <>
-            <SmartRecommendation onSelect={handleSend} />
-            <div className="mt-2">
-              <SuggestedPrompts onSelect={handleSend} />
-            </div>
-          </>
+          <div className="mt-2">
+            <SuggestedPrompts onSelect={handleSend} holdings={holdings} />
+          </div>
         )}
 
         {messages.map((msg) => {

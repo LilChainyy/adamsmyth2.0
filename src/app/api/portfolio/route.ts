@@ -15,6 +15,36 @@ const requestSchema = z.object({
   holdings: z.array(holdingSchema).min(1, "At least one stock is required"),
 });
 
+export async function GET() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: portfolios } = await supabase
+    .from("portfolios")
+    .select("id")
+    .eq("user_id", user.id)
+    .limit(1);
+
+  const portfolioId = portfolios?.[0]?.id;
+  if (!portfolioId) {
+    return NextResponse.json({ holdings: [] });
+  }
+
+  const { data: holdings } = await supabase
+    .from("holdings")
+    .select("id, ticker, company_name, shares")
+    .eq("portfolio_id", portfolioId);
+
+  return NextResponse.json({ holdings: holdings ?? [] });
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
 

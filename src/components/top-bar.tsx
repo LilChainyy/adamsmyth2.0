@@ -11,7 +11,7 @@ export function TopBar() {
         <Link
           href="/settings"
           aria-label="Settings"
-          className="rounded-lg p-2 text-stone-500 transition-colors hover:bg-amber-100 hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          className="-mr-1.5 flex size-11 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-amber-100 hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
         >
           <Settings className="size-5" />
         </Link>
