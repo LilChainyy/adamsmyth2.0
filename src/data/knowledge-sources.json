@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.investopedia.com/terms/p/pe-ratio.asp",
+    "title": "P/E Ratio Explained",
+    "dimension": "valuation_context",
+    "category": "valuation"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/e/eps.asp",
+    "title": "Earnings Per Share (EPS)",
+    "dimension": "financials",
+    "category": "fundamentals"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/d/dcf.asp",
+    "title": "Discounted Cash Flow Analysis",
+    "dimension": "valuation_context",
+    "category": "valuation"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/r/returnoninvestment.asp",
+    "title": "Return on Investment (ROI)",
+    "dimension": "financials",
+    "category": "fundamentals"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/m/moat.asp",
+    "title": "Economic Moat",
+    "dimension": "competitive_position",
+    "category": "strategy"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/b/balancesheet.asp",
+    "title": "Understanding Balance Sheets",
+    "dimension": "financials",
+    "category": "fundamentals"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/i/incomestatement.asp",
+    "title": "Income Statement Basics",
+    "dimension": "financials",
+    "category": "fundamentals"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/c/cashflowstatement.asp",
+    "title": "Cash Flow Statement",
+    "dimension": "financials",
+    "category": "fundamentals"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/d/diversification.asp",
+    "title": "Diversification Strategy",
+    "dimension": "risks",
+    "category": "portfolio-concepts"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/m/marketcapitalization.asp",
+    "title": "Market Capitalization",
+    "dimension": "valuation_context",
+    "category": "valuation"
+  },
+  {
+    "url": "https://www.investor.gov/introduction-investing/investing-basics/investment-products/stocks",
+    "title": "SEC - Introduction to Stocks",
+    "dimension": "business_model",
+    "category": "fundamentals"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/d/dividend.asp",
+    "title": "Dividends Explained",
+    "dimension": "business_model",
+    "category": "capital-allocation"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/b/buyback.asp",
+    "title": "Stock Buybacks",
+    "dimension": "business_model",
+    "category": "capital-allocation"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/s/sector.asp",
+    "title": "Market Sectors Overview",
+    "dimension": "competitive_position",
+    "category": "strategy"
+  },
+  {
+    "url": "https://www.investopedia.com/terms/r/risk.asp",
+    "title": "Understanding Investment Risk",
+    "dimension": "risks",
+    "category": "risk-factors"
+  }
+]

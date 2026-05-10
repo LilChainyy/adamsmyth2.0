@@ -6,6 +6,7 @@ import { BookOpen } from "lucide-react";
 import Link from "next/link";
 import { ProgressRing } from "@/components/progress/ProgressRing";
 import { LiteracyScore } from "@/components/progress/LiteracyScore";
+import { StreakBadge } from "@/components/progress/StreakBadge";
 import { StockProgressDetail } from "@/components/progress/StockProgressDetail";
 import type { OverallProgress } from "@/lib/progress";
 
@@ -81,6 +82,7 @@ export function PortfolioOverview() {
 
   return (
     <div className="space-y-4 px-4 pt-4 pb-6">
+      <StreakBadge />
       <LiteracyScore score={data.literacyScore} />
 
       <h3 className="pt-1 text-sm font-medium text-stone-500">Your Stocks</h3>

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { TopBar } from "@/components/top-bar";
 import { BottomNav } from "@/components/bottom-nav";
+import { TabViews } from "@/components/tab-views";
 import { Providers } from "@/components/providers";
 
 export default async function AppLayout({
@@ -41,7 +42,9 @@ export default async function AppLayout({
     <Providers>
       <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col bg-stone-50">
         <TopBar />
-        <main className="flex-1 pb-16">{children}</main>
+        <main className="flex flex-1 flex-col pb-16">
+          <TabViews />
+        </main>
         <BottomNav />
       </div>
     </Providers>

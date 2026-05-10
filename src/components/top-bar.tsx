@@ -10,7 +10,8 @@ export function TopBar() {
         </h1>
         <Link
           href="/settings"
-          className="rounded-lg p-2 text-stone-500 transition-colors hover:bg-amber-100 hover:text-stone-700"
+          aria-label="Settings"
+          className="rounded-lg p-2 text-stone-500 transition-colors hover:bg-amber-100 hover:text-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
         >
           <Settings className="size-5" />
         </Link>

@@ -13,8 +13,29 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AdamsMyth",
-  description: "Your investment learning assistant",
+  title: {
+    default: "AdamsMyth — Understand what you own",
+    template: "%s | AdamsMyth",
+  },
+  description:
+    "An AI learning assistant that helps you make sense of your investment portfolio — without telling you what to do.",
+  metadataBase: new URL("https://adamsmyth.com"),
+  openGraph: {
+    title: "AdamsMyth — Understand what you own",
+    description:
+      "An AI learning assistant that helps you make sense of your investment portfolio — without telling you what to do.",
+    siteName: "AdamsMyth",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AdamsMyth — Understand what you own",
+    description:
+      "An AI learning assistant that helps you make sense of your investment portfolio.",
+  },
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

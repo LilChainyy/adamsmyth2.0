@@ -41,24 +41,32 @@ export async function POST(request: Request) {
     );
   }
 
-  const { error } = await supabase
-    .from("learning_progress")
-    .upsert(
-      {
-        user_id: user.id,
-        ticker,
-        dimension,
-        sub_topic: subTopicId,
-        status,
-        completed_at: status === "completed" ? new Date().toISOString() : null,
-        evidence: evidence ?? null,
-      },
-      { onConflict: "user_id,ticker,dimension,sub_topic" }
+  try {
+    const { error } = await supabase
+      .from("learning_progress")
+      .upsert(
+        {
+          user_id: user.id,
+          ticker,
+          dimension,
+          sub_topic: subTopicId,
+          status,
+          completed_at: status === "completed" ? new Date().toISOString() : null,
+          evidence: evidence ?? null,
+        },
+        { onConflict: "user_id,ticker,dimension,sub_topic" }
+      );
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error("[progress/update] Error:", e);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
     );
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true });
 }

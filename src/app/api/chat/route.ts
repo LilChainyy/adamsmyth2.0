@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { anthropic } from "@ai-sdk/anthropic";
 import {
   streamText,
@@ -9,10 +10,11 @@ import {
 } from "ai";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { getStockProfile } from "@/lib/financial-data";
+import { getStockProfile, getFinancials, getNews, getCompetitors } from "@/lib/financial-data";
 import { getProgressByTicker } from "@/lib/progress";
 import { getDimensionForSubTopic } from "@/lib/learning-framework";
 import { getPortfolioId } from "@/lib/supabase/queries";
+import { searchKnowledgeBase } from "@/lib/knowledge-search";
 
 function buildSystemPrompt(
   holdings: { ticker: string; company_name: string; shares: number }[]
@@ -60,8 +62,33 @@ PROGRESS TRACKING:
 - Before diving into a stock, call get_learning_progress to see what's already covered
 - Periodically mention progress: "You've now covered 3 of 5 topics in Apple's Business Model dimension!"
 
-TOOLS:
-You have access to financial data tools and learning progress tools. When a user asks about a specific stock or company, use the get_stock_profile tool to fetch real data, then explain the results in beginner-friendly language. Always frame data as educational context, not investment advice.
+LEARNING CHECKPOINTS:
+- After explaining a significant concept (roughly every 3-4 exchanges), present a checkpoint using present_learning_checkpoint
+- Keep it friendly and low-pressure. Questions should relate to what was just discussed with 3-4 plausible options where wrong answers reflect common misconceptions
+- If the user answers correctly, the sub-topic is auto-completed — do NOT also call update_learning_progress
+
+TOOL USAGE GUIDANCE:
+- Call get_learning_progress before teaching about a stock to avoid re-covering known topics
+- Call update_learning_progress only when the user demonstrates understanding through conversation (not needed after checkpoints)
+- Call create_journal_entry naturally after 5+ meaningful exchanges about one stock
+- Call suggest_follow_ups at the end of every educational response
+- Always frame financial data as educational context, explaining what numbers mean for beginners
+- When explaining investing concepts, use search_knowledge_base to find relevant educational content. Weave the knowledge naturally into your explanation — don't just paste it.
+- When discussing competitive position or comparing a company to peers, call get_competitors to pull real peer metrics. Walk the user through what the comparison reveals about relative strengths and weaknesses.
+
+LEARNING JOURNAL:
+- After 5+ meaningful exchanges about a single stock, create a journal entry summarizing what the user learned
+- Do this naturally at the end of a topic, as a closing summary
+- The summary should be 2-3 sentences capturing the key concepts covered
+- The key_takeaway should be 1 sentence — the single most important insight
+- Don't announce that you're creating a journal entry — just do it quietly alongside your response
+
+FOLLOW-UP SUGGESTIONS:
+- After each educational response, call suggest_follow_ups with 2-3 natural follow-up questions the user might want to ask
+- Make them specific to what was just discussed — not generic
+- Keep them short and conversational (under 50 characters each)
+- Example: After explaining Apple's revenue segments, suggest: "Which segment is growing fastest?", "How do services compare to hardware margins?", "What do Apple's competitors look like?"
+- Always call this tool at the end of your response, after your text
 
 RESPONSE STYLE:
 1. Acknowledge the question
@@ -78,9 +105,10 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return new Response("Unauthorized", { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  try {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   // Fetch user's holdings for portfolio context
@@ -111,6 +139,48 @@ export async function POST(req: Request) {
         }),
         execute: async ({ ticker }) => {
           return await getStockProfile(ticker);
+        },
+      }),
+      get_financials: tool({
+        description:
+          "Get financial data for a stock including revenue, earnings, margins, P/E ratio, and growth rates. Returns up to 4 years of annual income statement data plus key financial ratios.",
+        inputSchema: z.object({
+          ticker: z
+            .string()
+            .describe("The stock ticker symbol, e.g. AAPL, MSFT, TSLA"),
+        }),
+        execute: async ({ ticker }) => {
+          return await getFinancials(ticker);
+        },
+      }),
+      get_news: tool({
+        description:
+          "Get recent news articles about a stock. Use this when the user asks about recent events, earnings reports, catalysts, or what's happening with a company.",
+        inputSchema: z.object({
+          ticker: z
+            .string()
+            .describe("The stock ticker symbol, e.g. AAPL, MSFT, TSLA"),
+          limit: z
+            .number()
+            .min(1)
+            .max(10)
+            .default(5)
+            .describe("Number of articles to fetch (1-10, default 5)"),
+        }),
+        execute: async ({ ticker, limit }) => {
+          return await getNews(ticker, limit);
+        },
+      }),
+      get_competitors: tool({
+        description:
+          "Get a comparison of a stock with its main competitors including key metrics like market cap, P/E ratio, revenue growth, and operating margin. Use this when discussing competitive position, market share, or comparing a company to its peers.",
+        inputSchema: z.object({
+          ticker: z
+            .string()
+            .describe("The stock ticker symbol, e.g. AAPL, MSFT, TSLA"),
+        }),
+        execute: async ({ ticker }) => {
+          return await getCompetitors(ticker);
         },
       }),
       get_learning_progress: tool({
@@ -154,7 +224,6 @@ export async function POST(req: Request) {
             ),
         }),
         execute: async ({ ticker, dimension, sub_topic, evidence }) => {
-          // Validate the sub-topic belongs to the claimed dimension
           const actualDimension = getDimensionForSubTopic(sub_topic);
           if (!actualDimension || actualDimension !== dimension) {
             return {
@@ -185,6 +254,135 @@ export async function POST(req: Request) {
           return { success: true, ticker, dimension, sub_topic, evidence };
         },
       }),
+      suggest_follow_ups: tool({
+        description:
+          "Suggest 2-3 natural follow-up questions the user might want to ask next, based on what was just discussed. Call this at the end of every educational response.",
+        inputSchema: z.object({
+          suggestions: z
+            .array(z.string().max(60))
+            .min(2)
+            .max(3)
+            .describe("2-3 short follow-up questions specific to the current topic"),
+        }),
+        execute: async (input) => {
+          return input;
+        },
+      }),
+      present_learning_checkpoint: tool({
+        description:
+          "Present an interactive comprehension question to test the user's understanding of a concept just discussed. The question appears as an interactive multiple-choice quiz in the chat. If the user answers correctly, the sub-topic is automatically marked as completed.",
+        inputSchema: z.object({
+          question: z
+            .string()
+            .describe("The comprehension question to ask"),
+          options: z
+            .array(z.string())
+            .min(3)
+            .max(4)
+            .describe("3-4 answer options, with wrong options reflecting common misconceptions"),
+          correct_index: z
+            .number()
+            .min(0)
+            .max(3)
+            .describe("Zero-based index of the correct answer in the options array"),
+          explanation: z
+            .string()
+            .describe("Brief explanation shown after answering, reinforcing the key concept"),
+          ticker: z
+            .string()
+            .describe("The stock ticker this checkpoint relates to, e.g. AAPL"),
+          dimension: z
+            .enum([
+              "business_model",
+              "financials",
+              "competitive_position",
+              "risks",
+              "news_catalysts",
+              "valuation_context",
+            ])
+            .describe("The learning dimension this checkpoint covers"),
+          sub_topic: z
+            .string()
+            .describe("The sub-topic ID this checkpoint tests, e.g. revenue_segments"),
+        }),
+        execute: async (input) => {
+          // Pass-through: the structured data is rendered as an interactive
+          // component on the client. No server-side logic needed.
+          return input;
+        },
+      }),
+      create_journal_entry: tool({
+        description:
+          "After a meaningful learning conversation about a single stock (5+ exchanges), create a journal entry summarizing what the user learned. Do this naturally when wrapping up a topic.",
+        inputSchema: z.object({
+          ticker: z
+            .string()
+            .describe("The stock ticker, e.g. AAPL"),
+          dimension: z
+            .enum([
+              "business_model",
+              "financials",
+              "competitive_position",
+              "risks",
+              "news_catalysts",
+              "valuation_context",
+            ])
+            .describe("The primary learning dimension covered"),
+          summary: z
+            .string()
+            .max(500)
+            .describe(
+              "2-3 sentence summary of what was learned in this conversation"
+            ),
+          key_takeaway: z
+            .string()
+            .max(200)
+            .describe(
+              "1 sentence — the single most important insight from this session"
+            ),
+        }),
+        execute: async ({ ticker, dimension, summary, key_takeaway }) => {
+          const { error } = await supabase.from("journal_entries").insert({
+            user_id: user.id,
+            ticker: ticker.toUpperCase(),
+            dimension,
+            summary,
+            key_takeaway,
+          });
+
+          if (error) {
+            return { success: false, error: error.message };
+          }
+
+          return { success: true, ticker, dimension, summary, key_takeaway };
+        },
+      }),
+      search_knowledge_base: tool({
+        description:
+          "Search the educational knowledge base for beginner-friendly explanations of investing concepts. Use this when explaining financial topics to find relevant, pre-written educational content to weave into your response.",
+        inputSchema: z.object({
+          query: z
+            .string()
+            .describe(
+              "The concept or topic to search for, e.g. 'P/E ratio', 'competitive moat', 'free cash flow'"
+            ),
+          limit: z
+            .number()
+            .min(1)
+            .max(5)
+            .default(3)
+            .describe("Number of results to return (1-5, default 3)"),
+        }),
+        execute: async ({ query, limit }) => {
+          const results = await searchKnowledgeBase(query, limit);
+          return results.map((r) => ({
+            title: r.title,
+            content: r.content,
+            dimension: r.dimension,
+            similarity: r.similarity,
+          }));
+        },
+      }),
     },
     stopWhen: stepCountIs(5),
   });
@@ -192,4 +390,11 @@ export async function POST(req: Request) {
   return createUIMessageStreamResponse({
     stream: result.toUIMessageStream(),
   });
+  } catch (e) {
+    console.error("[chat] Error:", e);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }

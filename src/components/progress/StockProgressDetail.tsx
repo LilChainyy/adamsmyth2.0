@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import { DimensionBar } from "@/components/progress/DimensionBar";
+import { JournalEntries } from "@/components/progress/JournalEntries";
 import type { TickerProgress } from "@/lib/progress";
 
 interface StockProgressDetailProps {
@@ -37,6 +38,8 @@ export function StockProgressDetail({
           {ticker.dimensions.map((dim) => (
             <DimensionBar key={dim.dimension} dimension={dim} />
           ))}
+
+          <JournalEntries ticker={ticker.ticker} />
 
           <Link
             href="/chat"

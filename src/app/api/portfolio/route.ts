@@ -36,59 +36,67 @@ export async function POST(request: Request) {
     );
   }
 
-  const { name, holdings } = parsed.data;
+  try {
+    const { name, holdings } = parsed.data;
 
-  // Create portfolio
-  const { data: portfolio, error: portfolioError } = await supabase
-    .from("portfolios")
-    .insert({ user_id: user.id, name })
-    .select("id")
-    .single();
+    // Create portfolio
+    const { data: portfolio, error: portfolioError } = await supabase
+      .from("portfolios")
+      .insert({ user_id: user.id, name })
+      .select("id")
+      .single();
 
-  if (portfolioError) {
+    if (portfolioError) {
+      return NextResponse.json(
+        { error: portfolioError.message },
+        { status: 500 }
+      );
+    }
+
+    // Insert holdings
+    const holdingRows = holdings.map((h) => ({
+      portfolio_id: portfolio.id,
+      ticker: h.ticker,
+      company_name: h.company_name || null,
+      shares: h.shares || null,
+      avg_cost_basis: h.avg_cost_basis || null,
+    }));
+
+    const { error: holdingsError } = await supabase
+      .from("holdings")
+      .insert(holdingRows);
+
+    if (holdingsError) {
+      return NextResponse.json(
+        { error: holdingsError.message },
+        { status: 500 }
+      );
+    }
+
+    // Initialize learning progress for each stock
+    await Promise.all(
+      holdings.map((h) => initializeProgressForTicker(supabase, user.id, h.ticker))
+    );
+
+    // Mark onboarding as completed
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ onboarding_completed: true })
+      .eq("id", user.id);
+
+    if (profileError) {
+      return NextResponse.json(
+        { error: profileError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ portfolio_id: portfolio.id });
+  } catch (e) {
+    console.error("[portfolio] Error:", e);
     return NextResponse.json(
-      { error: portfolioError.message },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
-
-  // Insert holdings
-  const holdingRows = holdings.map((h) => ({
-    portfolio_id: portfolio.id,
-    ticker: h.ticker,
-    company_name: h.company_name || null,
-    shares: h.shares || null,
-    avg_cost_basis: h.avg_cost_basis || null,
-  }));
-
-  const { error: holdingsError } = await supabase
-    .from("holdings")
-    .insert(holdingRows);
-
-  if (holdingsError) {
-    return NextResponse.json(
-      { error: holdingsError.message },
-      { status: 500 }
-    );
-  }
-
-  // Initialize learning progress for each stock
-  await Promise.all(
-    holdings.map((h) => initializeProgressForTicker(supabase, user.id, h.ticker))
-  );
-
-  // Mark onboarding as completed
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .update({ onboarding_completed: true })
-    .eq("id", user.id);
-
-  if (profileError) {
-    return NextResponse.json(
-      { error: profileError.message },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json({ portfolio_id: portfolio.id });
 }

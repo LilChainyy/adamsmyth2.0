@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X, ArrowRight, Loader2 } from "lucide-react";
+import { Plus, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { HoldingsList } from "@/components/onboarding/holdings-list";
 import { useSavePortfolio, type PortfolioHolding } from "@/hooks/use-save-portfolio";
 
 interface ManualEntryProps {
@@ -38,10 +39,6 @@ export function ManualEntry({ onBack }: ManualEntryProps) {
     setShares("");
     setCostBasis("");
     setError(null);
-  }
-
-  function handleRemoveStock(tickerToRemove: string) {
-    setHoldings(holdings.filter((h) => h.ticker !== tickerToRemove));
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -114,41 +111,12 @@ export function ManualEntry({ onBack }: ManualEntryProps) {
         <p className="text-sm text-destructive">{error}</p>
       )}
 
-      {holdings.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-stone-600">
-            Your stocks ({holdings.length})
-          </p>
-          {holdings.map((h) => (
-            <div
-              key={h.ticker}
-              className="flex items-center justify-between rounded-lg border border-amber-100 bg-white px-4 py-3"
-            >
-              <div>
-                <span className="font-semibold text-stone-800">
-                  {h.ticker}
-                </span>
-                {h.shares && (
-                  <span className="ml-2 text-sm text-stone-500">
-                    {h.shares} shares
-                  </span>
-                )}
-                {h.avg_cost_basis && (
-                  <span className="ml-2 text-sm text-stone-500">
-                    @ ${h.avg_cost_basis}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => handleRemoveStock(h.ticker)}
-                className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <HoldingsList
+        holdings={holdings}
+        onRemove={(tickerToRemove) =>
+          setHoldings(holdings.filter((h) => h.ticker !== tickerToRemove))
+        }
+      />
 
       <div className="flex gap-3">
         <Button

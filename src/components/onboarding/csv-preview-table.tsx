@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Check, X, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CSVPreviewRow } from "@/components/onboarding/csv-preview-row";
 import type { ParsedHolding } from "@/lib/csv-parser";
 
 interface CSVPreviewTableProps {
@@ -91,67 +91,16 @@ export function CSVPreviewTable({
             key={`${h.ticker}-${i}`}
             className="grid grid-cols-[1fr_80px_80px_64px] items-center gap-2 border-b border-stone-50 px-4 py-2 last:border-b-0"
           >
-            {editingIndex === i ? (
-              <>
-                <Input
-                  value={editValues.ticker}
-                  onChange={(e) => setEditValues({ ...editValues, ticker: e.target.value })}
-                  className="h-7 text-sm uppercase"
-                />
-                <Input
-                  type="number"
-                  value={editValues.shares}
-                  onChange={(e) => setEditValues({ ...editValues, shares: e.target.value })}
-                  className="h-7 text-sm"
-                  min="0"
-                  step="any"
-                />
-                <Input
-                  type="number"
-                  value={editValues.cost}
-                  onChange={(e) => setEditValues({ ...editValues, cost: e.target.value })}
-                  className="h-7 text-sm"
-                  min="0"
-                  step="any"
-                />
-                <div className="flex gap-1">
-                  <button
-                    onClick={saveEdit}
-                    className="rounded p-1 text-green-600 hover:bg-green-50"
-                  >
-                    <Check className="size-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setEditingIndex(null)}
-                    className="rounded p-1 text-stone-400 hover:bg-stone-100"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <span className="text-sm font-semibold text-stone-800">{h.ticker}</span>
-                <span className="text-sm text-stone-600">{h.shares ?? "—"}</span>
-                <span className="text-sm text-stone-600">
-                  {h.avg_cost_basis ? `$${h.avg_cost_basis}` : "—"}
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => startEdit(i)}
-                    className="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
-                  >
-                    <Pencil className="size-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleRemove(i)}
-                    className="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-red-500"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </div>
-              </>
-            )}
+            <CSVPreviewRow
+              holding={h}
+              isEditing={editingIndex === i}
+              editValues={editValues}
+              onEditValuesChange={setEditValues}
+              onStartEdit={() => startEdit(i)}
+              onSaveEdit={saveEdit}
+              onCancelEdit={() => setEditingIndex(null)}
+              onRemove={() => handleRemove(i)}
+            />
           </div>
         ))}
       </div>
