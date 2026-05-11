@@ -3,7 +3,6 @@
 import { StockCard } from "@/components/chat/stock-card";
 import { FinancialSnapshot } from "@/components/chat/financial-snapshot";
 import { NewsCard } from "@/components/chat/news-card";
-import { ProgressNudge } from "@/components/chat/progress-nudge";
 import { ComparisonTable } from "@/components/chat/ComparisonTable";
 import { LearningCheckpoint, type CheckpointData } from "@/components/chat/learning-checkpoint";
 import type { StockProfile, StockFinancials, StockNews, CompetitorComparison } from "@/lib/financial-data";
@@ -50,24 +49,8 @@ export function ToolPartRenderer({
     case "get_competitors":
       return <ComparisonTable data={output as CompetitorComparison} />;
 
-    case "update_learning_progress": {
-      const result = output as {
-        success?: boolean;
-        ticker?: string;
-        dimension?: string;
-        sub_topic?: string;
-      };
-      if (!result.success || !result.ticker || !result.dimension || !result.sub_topic) {
-        return null;
-      }
-      return (
-        <ProgressNudge
-          ticker={result.ticker}
-          dimension={result.dimension}
-          subTopic={result.sub_topic}
-        />
-      );
-    }
+    case "update_learning_progress":
+      return null;
 
     case "present_learning_checkpoint": {
       const checkpoint = output as CheckpointData;

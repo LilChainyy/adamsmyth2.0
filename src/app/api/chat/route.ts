@@ -1,3 +1,4 @@
+// DEPRECATED: Chat route kept for reference. Not served to users.
 import { NextResponse } from "next/server";
 import { anthropic } from "@ai-sdk/anthropic";
 import {

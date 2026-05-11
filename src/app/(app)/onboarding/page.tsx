@@ -10,7 +10,7 @@ export default async function OnboardingPage() {
     redirect("/login");
   }
 
-  // If already onboarded, skip to chat
+  // If already onboarded, skip to learn
   const { data: profile } = await supabase
     .from("profiles")
     .select("onboarding_completed")
@@ -18,7 +18,7 @@ export default async function OnboardingPage() {
     .single();
 
   if (profile?.onboarding_completed) {
-    redirect("/chat");
+    redirect("/learn");
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
+import { ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import { DimensionBar } from "@/components/progress/DimensionBar";
 import { JournalEntries } from "@/components/progress/JournalEntries";
 import type { TickerProgress } from "@/lib/progress";
@@ -42,10 +42,10 @@ export function StockProgressDetail({
           <JournalEntries ticker={ticker.ticker} />
 
           <Link
-            href="/chat"
+            href="/learn"
             className="flex items-center justify-center gap-2 rounded-lg bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-100"
           >
-            <MessageSquare className="size-4" />
+            <BookOpen className="size-4" />
             Learn more about {ticker.ticker}
           </Link>
         </div>

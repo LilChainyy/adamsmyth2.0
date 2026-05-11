@@ -37,10 +37,10 @@ function EmptyState() {
         Add stocks to your portfolio to start tracking your learning progress.
       </p>
       <Link
-        href="/chat"
+        href="/learn"
         className="mt-2 rounded-lg bg-amber-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-amber-800"
       >
-        Start learning in Chat
+        Start learning
       </Link>
     </div>
   );

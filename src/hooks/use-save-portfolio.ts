@@ -34,7 +34,7 @@ export function useSavePortfolio() {
         return;
       }
 
-      router.push("/chat");
+      router.push("/learn");
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");

@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageSquare, BarChart3 } from "lucide-react";
+import { BookOpen, PieChart } from "lucide-react";
 
 const tabs = [
-  { href: "/chat", label: "Chat", icon: MessageSquare },
-  { href: "/progress", label: "Progress", icon: BarChart3 },
+  { href: "/learn", label: "Learn", icon: BookOpen },
+  { href: "/portfolio", label: "My Portfolio", icon: PieChart },
 ] as const;
 
 export function BottomNav() {

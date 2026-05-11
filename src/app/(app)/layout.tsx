@@ -43,7 +43,7 @@ export default async function AppLayout({
       <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col bg-stone-50">
         <TopBar />
         <main className="flex flex-1 flex-col pb-16">
-          <TabViews />
+          <TabViews>{children}</TabViews>
         </main>
         <BottomNav />
       </div>
